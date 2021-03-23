@@ -43,18 +43,32 @@ int main(int argc, char *argv[]) {
 
 	bool quit = false;
 	SDL_Event event;
+	bool pause = false;
 
 	while (!quit) {
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 				case SDL_QUIT: {
 					quit = true;
+					pause = false;
 					break;
 				}
 				case SDL_KEYDOWN: {
 					if(event.key.keysym.sym == SDLK_r) {
+						pause = false;
 						cpu_reset();
 						timer_reset();
+					}
+					if(event.key.keysym.sym == SDLK_p) {
+						if (pause) {
+							cpu_start();
+							timer_start();
+							pause = false;
+						} else {
+							cpu_pause();
+							timer_pause();
+							pause = true;
+						}
 					}
 					break;
 				}

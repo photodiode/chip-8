@@ -134,6 +134,8 @@ void cpu_reset() {
 }
 
 void cpu_terminate() {
+	cpu_start();
+
 	pthread_mutex_lock(&running_lock);
 	running = false;
 	pthread_mutex_unlock(&running_lock);
