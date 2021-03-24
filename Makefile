@@ -6,7 +6,7 @@ BUILD_DIR = ./
 
 # compiler
 CC     = gcc
-LIBS   = -lSDL2 -lpthread -lSDL2
+LIBS   = -lSDL2
 DEPS   = src/cpu_instructions.h
 
 CFLAGS = -std=c11 -Wall -Wextra -Werror -Wshadow -Wunreachable-code -fno-omit-frame-pointer -pedantic -O2

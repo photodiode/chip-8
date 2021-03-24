@@ -11,9 +11,9 @@ static void nop() {
 
 // 00E0
 static void clear_screen() {
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	memset(GFX, 0x00, GFX_SIZE);
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 }
 
 // 00EE
@@ -149,7 +149,7 @@ static void draw_sprite() {
 
 	cpu.v[0xF] = 0;
 
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 
 	for(uint8_t y = 0; y < cpu.ci.n; y++) {
 
@@ -172,66 +172,66 @@ static void draw_sprite() {
 		GFX[byte_b] ^= mem[cpu.i+y] << (8 - x_bit);
 	}
 
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 }
 
 // Ex9E
 static void skip_if_xkey() {
-	pthread_mutex_lock(&keypad_lock);
+	SDL_LockMutex(keypad_lock);
 	if (keypad[cpu.v[cpu.ci.x]]) {
 		cpu.pc += 2;
 	}
-	pthread_mutex_unlock(&keypad_lock);
+	SDL_UnlockMutex(keypad_lock);
 }
 
 // ExA1
 static void skip_if_not_xkey() {
-	pthread_mutex_lock(&keypad_lock);
+	SDL_LockMutex(keypad_lock);
 	if (!keypad[cpu.v[cpu.ci.x]]) {
 		cpu.pc += 2;
 	}
-	pthread_mutex_unlock(&keypad_lock);
+	SDL_UnlockMutex(keypad_lock);
 }
 
 // Fx07
 static void load_x_dt() {
-	pthread_mutex_lock(&timer_lock);
+	SDL_LockMutex(timer_lock);
 	cpu.v[cpu.ci.x] = timer_delay;
-	pthread_mutex_unlock(&timer_lock);
+	SDL_UnlockMutex(timer_lock);
 }
 
 // Fx0A
 static void load_key_wait() {
 
 	while(1) {
-		pthread_mutex_lock(&timer_lock);
+		SDL_LockMutex(timer_lock);
 		if (keypad_pressed) {
 			cpu.v[cpu.ci.x] = keypad_pressed;
 			break;
 		}
-		pthread_mutex_unlock(&timer_lock);
+		SDL_UnlockMutex(timer_lock);
 
-		pthread_mutex_lock(&running_lock);
+		SDL_LockMutex(running_lock);
 		if (!running) break;
-		pthread_mutex_unlock(&running_lock);
+		SDL_UnlockMutex(running_lock);
 	}
 
-	pthread_mutex_unlock(&timer_lock);
-	pthread_mutex_unlock(&running_lock);
+	SDL_UnlockMutex(timer_lock);
+	SDL_UnlockMutex(running_lock);
 }
 
 // Fx15
 static void load_dt_x() {
-	pthread_mutex_lock(&timer_lock);
+	SDL_LockMutex(timer_lock);
 	timer_delay = cpu.v[cpu.ci.x];
-	pthread_mutex_unlock(&timer_lock);
+	SDL_UnlockMutex(timer_lock);
 }
 
 // Fx18
 static void load_st_x() {
-	pthread_mutex_lock(&timer_lock);
+	SDL_LockMutex(timer_lock);
 	timer_sound = cpu.v[cpu.ci.x];
-	pthread_mutex_unlock(&timer_lock);
+	SDL_UnlockMutex(timer_lock);
 }
 
 // Fx1E
@@ -247,25 +247,25 @@ static void load_font() {
 
 // Fx33
 static void load_i_bcd() {
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	mem[cpu.i]     =  cpu.v[cpu.ci.x] / 100;
 	mem[cpu.i + 1] = (cpu.v[cpu.ci.x] / 10) % 10;
 	mem[cpu.i + 2] =  cpu.v[cpu.ci.x] % 10;
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 }
 
 // Fx55
 static void save_regs() {
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	memcpy(&mem[cpu.i], cpu.v, cpu.ci.x+1);
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 }
 
 // Fx65
 static void load_regs() {
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	memcpy(cpu.v, &mem[cpu.i], cpu.ci.x+1);
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 }
 
 
@@ -375,10 +375,10 @@ const opcode_fp op_base_list[] = {
 static void execute_instruction() {
 
 	// get instruction
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	cpu.ci.upper = mem[cpu.pc];
 	cpu.ci.lower = mem[cpu.pc+1];
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 
 	cpu.pc += 2;
 	// ----

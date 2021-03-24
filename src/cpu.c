@@ -9,8 +9,7 @@
 #include <string.h>
 
 #include <time.h>
-#include <pthread.h>
-//#include <SDL2/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "mem.h"
 #include "timer.h"
@@ -47,20 +46,20 @@ static struct {
 	uint16_t  i;      // address register
 } cpu;
 
-static pthread_mutex_t cpu_lock = PTHREAD_MUTEX_INITIALIZER;
+static SDL_mutex* cpu_lock;
 
-static bool            running      = true;
-static pthread_mutex_t running_lock = PTHREAD_MUTEX_INITIALIZER;
+static bool       running = true;
+static SDL_mutex* running_lock;
 
-static bool            pause      = false;
-static pthread_mutex_t pause_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t  pause_cond = PTHREAD_COND_INITIALIZER;
+static bool       pause = false;
+static SDL_mutex* pause_lock;
+static SDL_cond*  pause_cond;
 
-static pthread_t cpu_thread;
+static SDL_Thread* cpu_thread;
 
 #include "cpu_instructions.h"
 
-void* cpu_function() {
+int cpu_function() {
 
 	long delay = 1000000000L / 1000L; // 1kHz
 	struct timespec time;
@@ -72,17 +71,17 @@ void* cpu_function() {
 		elapsed = time.tv_nsec;
 
 
-		pthread_mutex_lock(&running_lock);
+		SDL_LockMutex(running_lock);
 		if (!running) break;
-		pthread_mutex_unlock(&running_lock);
+		SDL_UnlockMutex(running_lock);
 
-		pthread_mutex_lock(&pause_lock);
-		while(pause) pthread_cond_wait(&pause_cond, &pause_lock);
-		pthread_mutex_unlock(&pause_lock);
+		SDL_LockMutex(pause_lock);
+		while(pause) SDL_CondWait(pause_cond, pause_lock);
+		SDL_UnlockMutex(pause_lock);
 
-		pthread_mutex_lock(&cpu_lock);
+		SDL_LockMutex(cpu_lock);
 		execute_instruction();
-		pthread_mutex_unlock(&cpu_lock);
+		SDL_UnlockMutex(cpu_lock);
 
 
 		clock_gettime(CLOCK_REALTIME, &time);
@@ -94,41 +93,49 @@ void* cpu_function() {
 		}, NULL);
 	}
 	
-	pthread_mutex_unlock(&running_lock);
+	SDL_UnlockMutex(running_lock);
 
-	return NULL;
+	return 0;
 }
 
 void cpu_reset();
 void cpu_initialize() {
+
 	srand(time(NULL));
-	pthread_create(&cpu_thread, NULL, cpu_function, NULL);
+
+	cpu_lock     = SDL_CreateMutex();
+	running_lock = SDL_CreateMutex();
+	pause_lock   = SDL_CreateMutex();
+	pause_cond   = SDL_CreateCond();
+
 	cpu_reset();
+
+	cpu_thread = SDL_CreateThread(cpu_function, "cpu_thread", NULL);
 }
 
 void cpu_pause() {
-	pthread_mutex_lock(&pause_lock);
+	SDL_LockMutex(pause_lock);
 	pause = true;
-	pthread_mutex_unlock(&pause_lock);
+	SDL_UnlockMutex(pause_lock);
 }
 
 void cpu_start() {
-	pthread_mutex_lock(&pause_lock);
+	SDL_LockMutex(pause_lock);
 	pause = false;
-	pthread_cond_broadcast(&pause_cond);
-	pthread_mutex_unlock(&pause_lock);
+	SDL_CondBroadcast(pause_cond);
+	SDL_UnlockMutex(pause_lock);
 }
 
 void cpu_reset() {
 	cpu_pause();
 
-	pthread_mutex_lock(&cpu_lock);
+	SDL_LockMutex(cpu_lock);
 	cpu.pc = 0x200;
 	cpu.sp = 0;
 	cpu.i  = 0;
 	memset(cpu.v, 0x00, 16);
 	clear_screen();
-	pthread_mutex_unlock(&cpu_lock);
+	SDL_UnlockMutex(cpu_lock);
 
 	cpu_start();
 }
@@ -136,9 +143,14 @@ void cpu_reset() {
 void cpu_terminate() {
 	cpu_start();
 
-	pthread_mutex_lock(&running_lock);
+	SDL_LockMutex(running_lock);
 	running = false;
-	pthread_mutex_unlock(&running_lock);
+	SDL_UnlockMutex(running_lock);
 
-	pthread_join(cpu_thread, NULL);
+	SDL_WaitThread(cpu_thread, NULL);
+
+	SDL_DestroyMutex(cpu_lock);
+	SDL_DestroyMutex(running_lock);
+	SDL_DestroyMutex(pause_lock);
+	SDL_DestroyCond(pause_cond);
 }

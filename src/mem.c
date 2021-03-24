@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pthread.h>
+#include <SDL2/SDL.h>
 
-uint8_t         mem[4096];
-pthread_mutex_t mem_lock = PTHREAD_MUTEX_INITIALIZER;
+uint8_t    mem[4096];
+SDL_mutex* mem_lock;
 
 const size_t  font_len = 80;
 const uint8_t font[] = {
@@ -32,6 +32,8 @@ const uint8_t font[] = {
 
 void mem_initialize() {
 
+	mem_lock = SDL_CreateMutex();
+
 	// load font
 	memcpy(&mem[0x000], font, font_len);
 
@@ -54,11 +56,15 @@ void mem_load_program(const char* filename) {
 		exit(EXIT_FAILURE);
 	}
 
-	pthread_mutex_lock(&mem_lock);
+	SDL_LockMutex(mem_lock);
 	fread(&mem[0x200], 1, file_size, file_ptr);
-	pthread_mutex_unlock(&mem_lock);
+	SDL_UnlockMutex(mem_lock);
 
 	fclose(file_ptr);
 
 	return;
+}
+
+void mem_terminate() {
+	SDL_DestroyMutex(mem_lock);
 }

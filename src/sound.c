@@ -1,7 +1,6 @@
 
 #include <stdint.h>
 
-#include <pthread.h>
 #include <SDL2/SDL.h>
 
 #include "timer.h"
@@ -39,13 +38,13 @@ void sound_initialize() {
 
 void sound_update() {
 
-	pthread_mutex_lock(&timer_lock);
+	SDL_LockMutex(timer_lock);
 	if (timer_sound > 0) {
 		SDL_PauseAudio(0);
 	} else {
 		SDL_PauseAudio(1);
 	}
-	pthread_mutex_unlock(&timer_lock);
+	SDL_UnlockMutex(timer_lock);
 }
 
 void sound_terminate() {

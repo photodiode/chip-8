@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-
-#include <pthread.h>
 #include <SDL2/SDL.h>
 
 #include "mem.h"
@@ -37,9 +32,10 @@ int main(int argc, char *argv[]) {
 	SDL_SetPaletteColors(surface->format->palette, colors, 0, 2);
 	// ----
 
-	cpu_initialize();
+	keypad_initialize();
 	timer_initialize();
 	sound_initialize();
+	cpu_initialize();
 
 	bool quit = false;
 	SDL_Event event;
@@ -81,9 +77,9 @@ int main(int argc, char *argv[]) {
 
 		SDL_RenderClear(renderer);
 
-		pthread_mutex_lock(&mem_lock);
+		SDL_LockMutex(mem_lock);
 		SDL_Texture* framebuffer = SDL_CreateTextureFromSurface(renderer, surface);
-		pthread_mutex_unlock(&mem_lock);
+		SDL_UnlockMutex(mem_lock);
 
 		SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
 		SDL_DestroyTexture(framebuffer);
@@ -92,8 +88,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	cpu_terminate();
-	timer_terminate();
 	sound_terminate();
+	timer_terminate();
+	keypad_terminate();
+
+	mem_terminate();
 
 	// terminate SDL
 	SDL_FreeSurface(surface);

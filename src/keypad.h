@@ -5,13 +5,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <pthread.h>
 #include <SDL2/SDL.h>
 
-extern bool            keypad[];
-extern uint8_t         keypad_pressed;
-extern pthread_mutex_t keypad_lock;
+extern bool       keypad[];
+extern uint8_t    keypad_pressed;
+extern SDL_mutex* keypad_lock;
 
+void keypad_initialize();
+void keypad_terminate();
 void keypad_get(SDL_Event*);
 
 

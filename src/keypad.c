@@ -2,13 +2,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <pthread.h>
 #include <SDL2/SDL.h>
 
 
-bool            keypad[16];
-uint8_t         keypad_pressed;
-pthread_mutex_t keypad_lock = PTHREAD_MUTEX_INITIALIZER;
+bool       keypad[16];
+uint8_t    keypad_pressed;
+SDL_mutex* keypad_lock;
 
 static SDL_Keycode keycodes[] = {
 	SDLK_0, SDLK_1, SDLK_2, SDLK_3,
@@ -17,9 +16,13 @@ static SDL_Keycode keycodes[] = {
 	SDLK_c, SDLK_d, SDLK_e, SDLK_f
 };
 
+void keypad_initialize() {
+	keypad_lock = SDL_CreateMutex();
+}
+
 void keypad_get(SDL_Event* event) {
 
-	pthread_mutex_lock(&keypad_lock);
+	SDL_LockMutex(keypad_lock);
 
 	keypad_pressed = 0;
 
@@ -44,5 +47,9 @@ void keypad_get(SDL_Event* event) {
 		default: break;
 	}
 
-	pthread_mutex_unlock(&keypad_lock);
+	SDL_UnlockMutex(keypad_lock);
+}
+
+void keypad_terminate() {
+	SDL_DestroyMutex(keypad_lock);
 }
