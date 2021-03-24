@@ -14,7 +14,7 @@
 int main(int argc, char *argv[]) {
 
 	if (argc == 1) {
-		printf("CHIP-8: Please specify a program to load (chip-8 <program>)\n");
+		printf("CHIP-8: Please specify a ROM to load (chip-8 <path/to/rom>)\n");
 		return EXIT_FAILURE;
 	}
 

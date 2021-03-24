@@ -43,7 +43,7 @@ void mem_load_program(const char* filename) {
 
 	FILE *file_ptr = fopen(filename, "rb");
 	if (!file_ptr) {
-		printf("CHIP-8: Couldn't open '%s'\n", filename);
+		printf("CHIP-8: Couldn't open ROM '%s'\n", filename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -52,7 +52,7 @@ void mem_load_program(const char* filename) {
 	fseek(file_ptr, 0, SEEK_SET);
 	
 	if (file_size >= 0xCA0) {
-		printf("CHIP-8: Program '%s' is too big\n", filename);
+		printf("CHIP-8: ROM '%s' is too big\n", filename);
 		exit(EXIT_FAILURE);
 	}
 
