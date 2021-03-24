@@ -113,13 +113,22 @@ void cpu_initialize() {
 	cpu_thread = SDL_CreateThread(cpu_function, "cpu_thread", NULL);
 }
 
-void cpu_pause() {
-	SDL_LockMutex(pause_lock);
+void unlock_wait_for_keypad() {
+	SDL_LockMutex(keypad_cond_lock);
+	keypad_pressed = true;
+	SDL_CondBroadcast(keypad_cond);
+	SDL_UnlockMutex(keypad_cond_lock);
+}
+
+void cpu_pause() {SDL_LockMutex(pause_lock);
+	unlock_wait_for_keypad();
 	pause = true;
 	SDL_UnlockMutex(pause_lock);
 }
 
 void cpu_start() {
+	unlock_wait_for_keypad();
+
 	SDL_LockMutex(pause_lock);
 	pause = false;
 	SDL_CondBroadcast(pause_cond);

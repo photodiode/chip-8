@@ -203,21 +203,13 @@ static void load_x_dt() {
 // Fx0A
 static void load_key_wait() {
 
-	while(1) {
-		SDL_LockMutex(timer_lock);
-		if (keypad_pressed) {
-			cpu.v[cpu.ci.x] = keypad_pressed;
-			break;
-		}
-		SDL_UnlockMutex(timer_lock);
-
-		SDL_LockMutex(running_lock);
-		if (!running) break;
-		SDL_UnlockMutex(running_lock);
-	}
-
-	SDL_UnlockMutex(timer_lock);
-	SDL_UnlockMutex(running_lock);
+	SDL_LockMutex(keypad_cond_lock);
+	while(!keypad_pressed) SDL_CondWait(keypad_cond, keypad_cond_lock);
+	SDL_UnlockMutex(keypad_cond_lock);
+	
+	SDL_LockMutex(keypad_lock);
+	cpu.v[cpu.ci.x] = keypad_pressed_key;
+	SDL_UnlockMutex(keypad_lock);
 }
 
 // Fx15

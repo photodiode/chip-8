@@ -7,9 +7,13 @@
 
 #include <SDL2/SDL.h>
 
-extern bool       keypad[];
-extern uint8_t    keypad_pressed;
+extern bool    keypad[];
+extern bool    keypad_pressed;
+extern uint8_t keypad_pressed_key;
+
 extern SDL_mutex* keypad_lock;
+extern SDL_mutex* keypad_cond_lock;
+extern SDL_cond*  keypad_cond;
 
 void keypad_initialize();
 void keypad_terminate();
