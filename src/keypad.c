@@ -30,7 +30,9 @@ void keypad_get(SDL_Event* event) {
 
 	SDL_LockMutex(keypad_lock);
 
+	SDL_LockMutex(keypad_cond_lock);
 	keypad_pressed = false;
+	SDL_UnlockMutex(keypad_cond_lock);
 
 	switch (event->type) {
 		case SDL_KEYDOWN: {
@@ -38,9 +40,7 @@ void keypad_get(SDL_Event* event) {
 				if(event->key.keysym.sym == keycodes[i]) {
 					if (!keypad[i]) {
 
-						SDL_LockMutex(keypad_lock);
 						keypad_pressed_key = i;
-						SDL_UnlockMutex(keypad_lock);
 						
 						SDL_LockMutex(keypad_cond_lock);
 						keypad_pressed = true;

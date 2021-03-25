@@ -120,7 +120,8 @@ void unlock_wait_for_keypad() {
 	SDL_UnlockMutex(keypad_cond_lock);
 }
 
-void cpu_pause() {SDL_LockMutex(pause_lock);
+void cpu_pause() {
+	SDL_LockMutex(pause_lock);
 	unlock_wait_for_keypad();
 	pause = true;
 	SDL_UnlockMutex(pause_lock);

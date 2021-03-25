@@ -1,6 +1,4 @@
 
-#ifndef instructions_h
-#define instructions_h
 
 typedef void(*opcode_fp)();
 
@@ -377,6 +375,3 @@ static void execute_instruction() {
 	
 	op_base_list[cpu.ci.op](cpu);
 }
-
-
-#endif // instructions_h
